@@ -1,0 +1,2 @@
+export const supaUrl = 'https://baimedeloighiqihreyo.supabase.co';
+export const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhaW1lZGVsb2lnaGlxaWhyZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4ODUxMjYsImV4cCI6MjA1OTQ2MTEyNn0.RFJO4A7poMtx2BBJDj3N18WSBHffpOOxsd57yHUpKh4'; 

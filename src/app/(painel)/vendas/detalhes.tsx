@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Text } from 'react-native';
-import { Card, ListItem, Button } from '@rneui/themed';
+import { ListItem, Button } from '@rneui/themed';
 import { useLocalSearchParams, router } from 'expo-router';
 import { vendaService } from '@/services/supabase';
 import { Venda } from '@/types';
 import colors from '@/constants/colors';
 import { FontAwesome } from '@expo/vector-icons';
+import CardCustom from '@/components/CardCustom';
 
 export default function DetalhesVenda() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -57,9 +58,9 @@ export default function DetalhesVenda() {
       </View>
 
       <ScrollView>
-        <Card>
-          <Card.Title>Informações da Venda</Card.Title>
-          <Card.Divider />
+        <CardCustom containerStyle={styles.card}>
+          <CardCustom.Title>Informações da Venda</CardCustom.Title>
+          <CardCustom.Divider />
           
           <View style={styles.infoContainer}>
             <Text style={styles.label}>Cliente:</Text>
@@ -84,11 +85,11 @@ export default function DetalhesVenda() {
               <Text style={styles.value}>{venda.observacoes}</Text>
             </View>
           )}
-        </Card>
+        </CardCustom>
 
-        <Card>
-          <Card.Title>Itens da Venda</Card.Title>
-          <Card.Divider />
+        <CardCustom containerStyle={styles.card}>
+          <CardCustom.Title>Itens da Venda</CardCustom.Title>
+          <CardCustom.Divider />
           
           {venda.itens.map((item, index) => (
             <ListItem key={item.id} bottomDivider>
@@ -115,7 +116,7 @@ export default function DetalhesVenda() {
             <Text style={styles.totalLabel}>Total:</Text>
             <Text style={styles.totalValor}>R$ {venda.valor.toFixed(2)}</Text>
           </View>
-        </Card>
+        </CardCustom>
       </ScrollView>
     </View>
   );
@@ -177,5 +178,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: colors.primary,
+  },
+  card: {
+    margin: 8,
+    borderRadius: 8,
   },
 }); 

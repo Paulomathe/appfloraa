@@ -1,40 +1,47 @@
-import { View, Text, StyleSheet, TextInput, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Pressable, Alert, ScrollView } from 'react-native';
 import colors from '@/constants/colors';
-import React from 'react';
-import { Link } from 'expo-router';
-import { supabase } from '@/lib/supabase';
-import { router } from 'expo-router';
-import { useAuth } from '@/contexts/AuthContext';
+import React, { useState } from 'react';
+import { Link, useRouter } from 'expo-router';
 
 export default function Login() {
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [loading, setILoading] = React.useState(false);
-  const { setAuth } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  // Redireciona para a tela interna de redefinição de senha
+  function handleForgotPassword() {
+    router.push('/redefinir-senha');
+  }
 
   async function handleLogin() {
-    setILoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
-    });
-    if (error) {
-      Alert.alert('Erro', error.message);
-      setILoading(false);
-      return;
+    setLoading(true);
+    try {
+      if (!email || !password) {
+        Alert.alert('Erro', 'Preencha email e senha.');
+        setLoading(false);
+        return;
+      }
+      // Simula login (substitua por lógica real, se necessário)
+      console.log({ email, password });
+      // Redireciona para a home após login
+      router.replace('/(painel)/home');
+    } catch (error: any) {
+      Alert.alert('Erro', error.message || 'Erro ao fazer login.');
+    } finally {
+      setLoading(false);
     }
-    setAuth(data.user);
-    setILoading(false);
-    router.replace('/(painel)/home');
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       <View style={styles.header}>
         <Text style={styles.logoText}>
-          Dev<Text style={{ color: colors.green }}>App</Text>
+          <Text style={{ color: colors.green }}>PDV MOBILE</Text>
         </Text>
-        <Text style={styles.slogan}>Floricultura</Text>
+        <Text style={styles.slogan}>
+          Faça seu login
+        </Text>
       </View>
       <View style={styles.form}>
         <View>
@@ -42,7 +49,7 @@ export default function Login() {
           <TextInput
             style={styles.input}
             placeholder="Digite seu email"
-            placeholderTextColor={colors.white}
+            placeholderTextColor={colors.textLight}
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="email-address"
@@ -58,35 +65,49 @@ export default function Login() {
           <TextInput
             style={styles.input}
             placeholder="Digite sua senha"
-            placeholderTextColor={colors.white}
+            placeholderTextColor={colors.textLight}
             secureTextEntry={true}
             value={password}
             onChangeText={setPassword}
           />
         </View>
-        <Pressable style={styles.button} onPress={handleLogin}>
+
+        <Pressable
+          style={styles.forgotPassword}
+          onPress={handleForgotPassword}
+        >
+          <Text style={styles.forgotPasswordText}>Esqueceu sua senha?</Text>
+        </Pressable>
+
+        <Pressable
+          style={[styles.button, loading && styles.buttonDisabled]}
+          onPress={handleLogin}
+          disabled={loading}
+        >
           <Text style={styles.buttonText}>
             {loading ? 'Carregando...' : 'Entrar'}
           </Text>
         </Pressable>
+
+        <Text style={styles.signupText}>Ainda não tem uma conta?</Text>
         <Link href="/signup/page" style={styles.link}>
-          <Text>Ainda não tem uma conta? Cadastre-se</Text>
+          <Text style={styles.linkText}>Cadastre-se</Text>
         </Link>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 34,
     backgroundColor: colors.zinc,
-    alignItems: 'center',
   },
   header: {
     paddingLeft: 14,
     paddingRight: 14,
+    paddingTop: 34,
+    alignItems: 'center',
   },
   logoText: {
     fontSize: 20,
@@ -105,38 +126,61 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     paddingTop: 24,
-    paddingLeft: 14,
-    paddingRight: 14,
+    paddingHorizontal: 14,
+    paddingBottom: 30,
   },
   label: {
     color: colors.zinc,
     marginBottom: 4,
+    fontSize: 16,
+    fontWeight: '500',
   },
   input: {
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.gray,
-    paddingHorizontal: 8,
-    paddingTop: 14,
-    paddingBottom: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
     marginBottom: 16,
+    color: colors.text,
+    fontSize: 16,
+  },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginBottom: 12,
+  },
+  forgotPasswordText: {
+    color: colors.primary,
+    fontWeight: 'bold',
+    fontSize: 14,
   },
   button: {
     justifyContent: 'center',
     alignItems: 'center',
-    borderColor: colors.green,
+    backgroundColor: colors.primary,
     width: '100%',
-    paddingTop: 14,
-    paddingBottom: 14,
+    paddingVertical: 14,
     borderRadius: 8,
+    marginTop: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   buttonText: {
-    color: colors.zinc,
+    color: colors.white,
     fontWeight: 'bold',
   },
-  link: {
+  signupText: {
     marginTop: 16,
-    alignSelf: 'center',
-    color: colors.zinc,
+    textAlign: 'center',
+    color: colors.textLight,
   },
-}); 
+  link: {
+    marginTop: 8,
+    alignSelf: 'center',
+  },
+  linkText: {
+    color: colors.primary,
+    fontWeight: 'bold',
+  },
+});

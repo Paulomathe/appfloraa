@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Text } from 'react-native';
-import { Button, Input, Card, ListItem } from '@rneui/themed';
+import { Button, Input, ListItem } from '@rneui/themed';
 import { router, useNavigation } from 'expo-router';
 import { vendaService } from '@/services/supabase';
 import { Venda, Produto, Servico, ItemVenda } from '@/types';
@@ -8,9 +8,13 @@ import colors from '@/constants/colors';
 import ProdutoSearch from '@/components/ProdutoSearch';
 import ServicoSearch from '@/components/ServicoSearch';
 import { FontAwesome } from '@expo/vector-icons';
+import { useEmpresa } from '@/contexts/EmpresaContext';
+import { supabase } from '@/lib/supabase';
+import CardCustom from '@/components/CardCustom';
 
 export default function NovaVenda() {
   const navigation = useNavigation();
+  const { empresa } = useEmpresa();
   const [venda, setVenda] = useState<Omit<Venda, 'id'>>({
     cliente: '',
     vendedor: '',
@@ -100,6 +104,10 @@ export default function NovaVenda() {
   };
 
   const handleSubmit = async () => {
+    if (!empresa) {
+      Alert.alert('Erro', 'Selecione uma filial antes de cadastrar.');
+      return;
+    }
     if (!venda.cliente.trim()) {
       Alert.alert('Erro', 'O nome do cliente é obrigatório');
       return;
@@ -115,11 +123,13 @@ export default function NovaVenda() {
 
     try {
       setCarregando(true);
-      await vendaService.criar(venda);
-      Alert.alert('Sucesso', 'Venda registrada com sucesso!');
-      router.push('/(painel)/home');
+      await supabase
+        .from('vendas')
+        .insert([{ ...venda, empresa_id: empresa.id }]);
+      Alert.alert('Sucesso', 'Venda cadastrada com sucesso!');
+      router.replace('/(painel)/home');
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível registrar a venda');
+      Alert.alert('Erro', 'Não foi possível cadastrar a venda');
     } finally {
       setCarregando(false);
     }
@@ -144,22 +154,22 @@ export default function NovaVenda() {
           autoCapitalize="words"
         />
 
-        <Card>
-          <Card.Title>Produtos</Card.Title>
-          <Card.Divider />
+        <CardCustom containerStyle={styles.card}>
+          <CardCustom.Title>Produtos</CardCustom.Title>
+          <CardCustom.Divider />
           <ProdutoSearch onSelect={handleAddProduto} />
-        </Card>
+        </CardCustom>
 
-        <Card>
-          <Card.Title>Serviços (Opcional)</Card.Title>
-          <Card.Divider />
+        <CardCustom containerStyle={styles.card}>
+          <CardCustom.Title>Serviços (Opcional)</CardCustom.Title>
+          <CardCustom.Divider />
           <ServicoSearch onSelect={handleAddServico} />
-        </Card>
+        </CardCustom>
 
         {venda.itens.length > 0 && (
-          <Card>
-            <Card.Title>Itens da Venda</Card.Title>
-            <Card.Divider />
+          <CardCustom containerStyle={styles.card}>
+            <CardCustom.Title>Itens da Venda</CardCustom.Title>
+            <CardCustom.Divider />
             {venda.itens.map((item, index) => (
               <ListItem key={item.id} bottomDivider>
                 <FontAwesome
@@ -199,7 +209,7 @@ export default function NovaVenda() {
               <Text style={styles.totalLabel}>Total:</Text>
               <Text style={styles.totalValor}>R$ {venda.valor.toFixed(2)}</Text>
             </View>
-          </Card>
+          </CardCustom>
         )}
 
         <Input
@@ -257,5 +267,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: colors.primary,
+  },
+  card: {
+    margin: 8,
+    borderRadius: 8,
   },
 }); 

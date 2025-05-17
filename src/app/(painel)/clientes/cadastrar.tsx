@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Input, Button } from '@rneui/themed';
 import { useLocalSearchParams, router } from 'expo-router';
-import { clienteService } from '@/services/supabase';
+import { supabase } from '@/lib/supabase';
 import colors from '@/constants/colors';
 import { FontAwesome } from '@expo/vector-icons';
+import { useEmpresa, Empresa } from '@/contexts/EmpresaContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function CadastrarCliente() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -12,17 +14,24 @@ export default function CadastrarCliente() {
   const [telefone, setTelefone] = useState('');
   const [email, setEmail] = useState('');
   const [carregando, setCarregando] = useState(false);
+  const { empresa, setEmpresa } = useEmpresa();
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (id) {
+    if (id && empresa) {
       carregarCliente();
     }
-  }, [id]);
+  }, [id, empresa]);
 
   const carregarCliente = async () => {
     try {
       setCarregando(true);
-      const { data } = await clienteService.buscarPorId(id);
+      const { data } = await supabase
+        .from('clientes')
+        .select('*')
+        .eq('id', id)
+        .eq('empresa_id', empresa?.id)
+        .single();
       if (data) {
         setNome(data.nome);
         setTelefone(data.telefone);
@@ -40,14 +49,23 @@ export default function CadastrarCliente() {
       Alert.alert('Erro', 'O nome é obrigatório');
       return;
     }
-
+    if (!empresa) {
+      Alert.alert('Erro', 'Selecione uma filial antes de cadastrar.');
+      return;
+    }
     try {
       setCarregando(true);
       if (id) {
-        await clienteService.atualizar(id, { nome, telefone, email });
+        await supabase
+          .from('clientes')
+          .update({ nome, telefone, email })
+          .eq('id', id)
+          .eq('empresa_id', empresa.id);
         Alert.alert('Sucesso', 'Cliente atualizado com sucesso!');
       } else {
-        await clienteService.criar({ nome, telefone, email });
+        await supabase
+          .from('clientes')
+          .insert([{ nome, telefone, email, empresa_id: empresa.id }]);
         Alert.alert('Sucesso', 'Cliente cadastrado com sucesso!');
       }
       router.back();
@@ -56,6 +74,43 @@ export default function CadastrarCliente() {
     } finally {
       setCarregando(false);
     }
+  };
+
+  const handleExcluir = async (cliente: Cliente) => {
+    if (!empresa) {
+      Alert.alert('Erro', 'Selecione uma filial.');
+      return;
+    }
+    Alert.alert(
+      'Confirmar exclusão',
+      `Deseja realmente excluir o cliente "${cliente.nome}"?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const { error, count } = await supabase
+                .from('clientes')
+                .delete({ count: 'exact' })
+                .eq('id', cliente.id)
+                .eq('empresa_id', empresa.id);
+
+              if (error) throw error;
+              if (count === 0) {
+                Alert.alert('Erro', 'Nenhum registro foi excluído. Verifique se o cliente pertence à filial selecionada e se você tem permissão.');
+              } else {
+                Alert.alert('Sucesso', 'Cliente excluído com sucesso!');
+                carregarClientes();
+              }
+            } catch (error) {
+              Alert.alert('Erro', 'Não foi possível excluir o cliente');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (

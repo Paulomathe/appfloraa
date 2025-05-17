@@ -1,11 +1,14 @@
 import { Drawer } from 'expo-router/drawer';
 import { FontAwesome } from '@expo/vector-icons';
 import colors from "@/constants/colors";
-import { Alert, TouchableOpacity, Text, View } from 'react-native';
+import { Alert, TouchableOpacity, Text, View, StyleSheet } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
+import { useEffect, useRef } from 'react';
+import { SwitchEmpresa } from '@/components/SwitchEmpresa';
+import { ProfileInfo } from '@/components/ProfileInfo';
 
 type DrawerIconProps = {
   color: string;
@@ -13,53 +16,58 @@ type DrawerIconProps = {
 };
 
 export default function PainelLayout() {
-  const { setAuth } = useAuth();
+  const { setAuth, user } = useAuth();
+  const redirectRef = useRef(false);
+  
+  useEffect(() => {
+    if (!user && !redirectRef.current) {
+      redirectRef.current = true;
+      router.replace('/signin/page');
+    }
+  }, [user]);
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Sair',
-      'Deseja realmente sair do aplicativo?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Sair',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await supabase.auth.signOut();
-              setAuth(null);
-              router.replace('/signin/page');
-            } catch (error) {
-              Alert.alert('Erro', 'Não foi possível sair. Tente novamente.');
-            }
-          },
-        },
-      ]
-    );
+  if (!user) {
+    return null;
+  }
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setAuth(null);
+      router.replace('/signin/page');
+    } catch (error) {
+      Alert.alert('Erro', 'Erro ao fazer logout');
+    }
   };
 
   function CustomDrawerContent(props: any) {
+    const userName = user?.user_metadata?.name || 'Usuário';
+    const userEmail = user?.email || '';
+    const profileImage = user?.user_metadata?.avatar_url || null;
+
     return (
       <DrawerContentScrollView {...props}>
-        <DrawerItemList {...props} />
-        <View style={{ 
-          borderTopWidth: 1, 
-          borderTopColor: colors.border,
-          marginTop: 'auto',
-          paddingTop: 16
-        }}>
-          <TouchableOpacity
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingVertical: 12,
-              paddingHorizontal: 16,
-            }}
-            onPress={handleLogout}
-          >
-            <FontAwesome name="sign-out" size={24} color={colors.error} style={{ marginRight: 32 }} />
-            <Text style={{ color: colors.error, fontSize: 16 }}>Sair</Text>
-          </TouchableOpacity>
+        <View style={styles.drawerContent}>
+          <ProfileInfo 
+            name={userName}
+            email={userEmail}
+            avatarUrl={profileImage}
+          />
+          
+          <SwitchEmpresa />
+
+          <View style={styles.drawerSection}>
+            <DrawerItemList {...props} />
+            <View style={styles.logoutSection}>
+              <TouchableOpacity
+                style={styles.logoutButton}
+                onPress={handleLogout}
+              >
+                <FontAwesome name="sign-out" size={24} color={colors.error} style={{ marginRight: 32 }} />
+                <Text style={{ color: colors.error, fontSize: 16 }}>Sair</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </DrawerContentScrollView>
     );
@@ -187,4 +195,26 @@ export default function PainelLayout() {
       />
     </Drawer>
   );
-} 
+}
+
+const styles = StyleSheet.create({
+  drawerContent: {
+    flex: 1,
+  },
+  drawerSection: {
+    flex: 1,
+    marginTop: 8,
+  },
+  logoutSection: {
+    borderTopWidth: 1, 
+    borderTopColor: colors.border,
+    marginTop: 'auto',
+    paddingTop: 16,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  }
+}); 

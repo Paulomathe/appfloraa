@@ -1,22 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, Alert, Pressable } from 'react-native';
-import { Card, Button } from '@rneui/themed';
+import { Button } from '@rneui/themed';
 import { router, useNavigation } from 'expo-router';
+import { supabase } from '@/lib/supabase';
+import { useEmpresa } from '@/contexts/EmpresaContext';
 import { Venda } from '@/types';
-import { vendaService } from '@/services/supabase';
 import colors from '@/constants/colors';
 import { FontAwesome } from '@expo/vector-icons';
+import CardCustom from '@/components/CardCustom';
 
 export default function Home() {
-  const navigation = useNavigation();
+  const { empresa } = useEmpresa();
   const [vendas, setVendas] = useState<Venda[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [lastTap, setLastTap] = useState(0);
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    if (empresa) carregarVendas();
+  }, [empresa]);
 
   const carregarVendas = async () => {
     try {
       setCarregando(true);
-      const data = await vendaService.listarVendasDoDia();
+      const { data, error } = await supabase
+        .from('vendas')
+        .select('*')
+        .eq('empresa_id', empresa?.id);
+      if (error) throw error;
       setVendas(data);
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível carregar as vendas');
@@ -24,11 +35,6 @@ export default function Home() {
       setCarregando(false);
     }
   };
-
-  // Carrega as vendas quando a tela é montada
-  useEffect(() => {
-    carregarVendas();
-  }, []);
 
   // Recarrega as vendas quando a tela é focada
   useEffect(() => {
@@ -55,16 +61,16 @@ export default function Home() {
 
   const renderVenda = ({ item }: { item: Venda }) => (
     <Pressable onPress={() => handleDoubleTap(item)}>
-      <Card containerStyle={styles.card}>
-        <Card.Title>{item.cliente}</Card.Title>
-        <Card.Divider />
+      <CardCustom containerStyle={styles.card}>
+        <CardCustom.Title>{item.cliente}</CardCustom.Title>
+        <CardCustom.Divider />
         <View style={styles.vendaInfo}>
           <Text style={styles.text}>Vendedor: {item.vendedor}</Text>
           <Text style={styles.text}>Valor: R$ {item.valor.toFixed(2)}</Text>
           <Text style={styles.text}>Data: {new Date(item.data).toLocaleString()}</Text>
           {item.observacoes && <Text style={styles.text}>Obs: {item.observacoes}</Text>}
         </View>
-      </Card>
+      </CardCustom>
     </Pressable>
   );
 

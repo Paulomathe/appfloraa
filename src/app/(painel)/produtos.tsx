@@ -3,23 +3,29 @@ import { View, StyleSheet, FlatList, Alert, Pressable } from 'react-native';
 import { Button, ListItem } from '@rneui/themed';
 import { FontAwesome } from '@expo/vector-icons';
 import { Produto } from '@/types';
-import { produtoService } from '@/services/supabase';
+import { supabase } from '@/lib/supabase';
 import colors from '@/constants/colors';
 import { router } from 'expo-router';
+import { useEmpresa } from '@/contexts/EmpresaContext';
 
 export default function Produtos() {
+  const { empresa } = useEmpresa();
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [lastTap, setLastTap] = useState(0);
 
   useEffect(() => {
-    carregarProdutos();
-  }, []);
+    if (empresa) carregarProdutos();
+  }, [empresa]);
 
   const carregarProdutos = async () => {
     try {
       setCarregando(true);
-      const data = await produtoService.listar();
+      const { data, error } = await supabase
+        .from('produtos')
+        .select('*')
+        .eq('empresa_id', empresa?.id);
+      if (error) throw error;
       setProdutos(data);
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível carregar os produtos');
@@ -50,7 +56,10 @@ export default function Produtos() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await produtoService.excluir(produto.id);
+              await supabase
+                .from('produtos')
+                .delete()
+                .eq('id', produto.id);
               Alert.alert('Sucesso', 'Produto excluído com sucesso!');
               carregarProdutos();
             } catch (error) {

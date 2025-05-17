@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Ícone PDV</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        canvas {
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        label {
+            font-weight: bold;
+        }
+        
+        button {
+            background-color: #00A551;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background-color: #008542;
+        }
+        
+        .download-btn {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gerador de Ícone PDV</h1>
+        
+        <div class="controls">
+            <div>
+                <label for="bgColor">Cor de Fundo:</label>
+                <input type="color" id="bgColor" value="#00A551">
+            </div>
+            
+            <div>
+                <label for="textColor">Cor do Texto:</label>
+                <input type="color" id="textColor" value="#FFFFFF">
+            </div>
+            
+            <div>
+                <label for="text">Texto:</label>
+                <input type="text" id="text" value="PDV" maxlength="3">
+            </div>
+            
+            <div>
+                <label for="fontSize">Tamanho da Fonte:</label>
+                <input type="range" id="fontSize" min="100" max="500" value="320">
+                <span id="fontSizeValue">320px</span>
+            </div>
+            
+            <button onclick="updateIcon()">Atualizar Ícone</button>
+        </div>
+        
+        <canvas id="iconCanvas" width="1024" height="1024"></canvas>
+        
+        <div class="download-options">
+            <button onclick="downloadIcon('icon.png')" class="download-btn">Baixar como icon.png</button>
+            <button onclick="downloadIcon('favicon.png')" class="download-btn">Baixar como favicon.png</button>
+            <button onclick="downloadIcon('adaptive-icon.png')" class="download-btn">Baixar como adaptive-icon.png</button>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('iconCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Atualizar valor do slider
+        const fontSizeSlider = document.getElementById('fontSize');
+        const fontSizeValue = document.getElementById('fontSizeValue');
+        
+        fontSizeSlider.addEventListener('input', function() {
+            fontSizeValue.textContent = this.value + 'px';
+        });
+        
+        function updateIcon() {
+            const bgColor = document.getElementById('bgColor').value;
+            const textColor = document.getElementById('textColor').value;
+            const text = document.getElementById('text').value || 'PDV';
+            const fontSize = document.getElementById('fontSize').value;
+            
+            // Limpar canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Desenhar fundo
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Configurar texto
+            ctx.fillStyle = textColor;
+            ctx.font = `bold ${fontSize}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Desenhar texto
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+        }
+        
+        function downloadIcon(filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // Gerar ícone inicial
+        updateIcon();
+    </script>
+</body>
+</html> 

@@ -3,23 +3,29 @@ import { View, StyleSheet, FlatList, Alert, Pressable } from 'react-native';
 import { Button, ListItem } from '@rneui/themed';
 import { FontAwesome } from '@expo/vector-icons';
 import { Cliente } from '@/types';
-import { clienteService } from '@/services/supabase';
+import { supabase } from '@/lib/supabase';
 import colors from '@/constants/colors';
 import { router } from 'expo-router';
+import { useEmpresa } from '@/contexts/EmpresaContext';
 
 export default function Clientes() {
+  const { empresa } = useEmpresa();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [lastTap, setLastTap] = useState(0);
 
   useEffect(() => {
-    carregarClientes();
-  }, []);
+    if (empresa) carregarClientes();
+  }, [empresa]);
 
   const carregarClientes = async () => {
     try {
       setCarregando(true);
-      const data = await clienteService.listar();
+      const { data, error } = await supabase
+        .from('clientes')
+        .select('*')
+        .eq('empresa_id', empresa?.id);
+      if (error) throw error;
       setClientes(data);
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível carregar os clientes');
@@ -50,7 +56,10 @@ export default function Clientes() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await clienteService.excluir(cliente.id);
+              await supabase
+                .from('clientes')
+                .delete()
+                .eq('id', cliente.id);
               Alert.alert('Sucesso', 'Cliente excluído com sucesso!');
               carregarClientes();
             } catch (error) {

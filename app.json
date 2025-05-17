@@ -1,37 +1,49 @@
 {
   "expo": {
-    "name": "Flora App",
+    "name": "PDV App",
     "slug": "appflora",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/iconeApp.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/images/loading.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#00A551"
     },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.devapp.pdvapp",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Este aplicativo usa a câmera para escanear códigos de barras e QR codes",
+        "NSPhotoLibraryUsageDescription": "Este aplicativo precisa de acesso à galeria para escolher imagens de produtos",
+        "NSLocationWhenInUseUsageDescription": "Este aplicativo usa sua localização para mostrar lojas próximas"
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/adaptiveIconApp.png",
+        "backgroundColor": "#00A551"
       },
-      "package": "com.devapp.appflora",
+      "package": "com.devapp.pdvapp",
       "permissions": [
-        "INTERNET"
-      ]
+        "INTERNET",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
+      "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/iconeApp.png"
     },
     "plugins": [
       "expo-router"

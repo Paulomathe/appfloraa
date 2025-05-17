@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Input, Button } from '@rneui/themed';
 import { useLocalSearchParams, router } from 'expo-router';
-import { produtoService } from '@/services/supabase';
+import { supabase } from '@/lib/supabase';
 import colors from '@/constants/colors';
 import { FontAwesome } from '@expo/vector-icons';
+import { useEmpresa } from '@/contexts/EmpresaContext';
 
 export default function CadastrarProduto() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -13,17 +14,23 @@ export default function CadastrarProduto() {
   const [descricao, setDescricao] = useState('');
   const [estoque, setEstoque] = useState('');
   const [carregando, setCarregando] = useState(false);
+  const { empresa } = useEmpresa();
 
   useEffect(() => {
-    if (id) {
+    if (id && empresa) {
       carregarProduto();
     }
-  }, [id]);
+  }, [id, empresa]);
 
   const carregarProduto = async () => {
     try {
       setCarregando(true);
-      const { data } = await produtoService.buscarPorId(id);
+      const { data } = await supabase
+        .from('produtos')
+        .select('*')
+        .eq('id', id)
+        .eq('empresa_id', empresa?.id)
+        .single();
       if (data) {
         setNome(data.nome);
         setPreco(data.preco.toString());
@@ -42,6 +49,10 @@ export default function CadastrarProduto() {
       Alert.alert('Erro', 'O nome é obrigatório');
       return;
     }
+    if (!empresa) {
+      Alert.alert('Erro', 'Selecione uma filial antes de cadastrar.');
+      return;
+    }
     if (!preco || isNaN(Number(preco)) || Number(preco) <= 0) {
       Alert.alert('Erro', 'O preço deve ser um número maior que zero');
       return;
@@ -58,13 +69,20 @@ export default function CadastrarProduto() {
         preco: Number(preco),
         descricao,
         estoque: Number(estoque),
+        empresa_id: empresa.id,
       };
 
       if (id) {
-        await produtoService.atualizar(id, dadosProduto);
+        await supabase
+          .from('produtos')
+          .update(dadosProduto)
+          .eq('id', id)
+          .eq('empresa_id', empresa.id);
         Alert.alert('Sucesso', 'Produto atualizado com sucesso!');
       } else {
-        await produtoService.criar(dadosProduto);
+        await supabase
+          .from('produtos')
+          .insert([dadosProduto]);
         Alert.alert('Sucesso', 'Produto cadastrado com sucesso!');
       }
       router.push('/(painel)/produtos');

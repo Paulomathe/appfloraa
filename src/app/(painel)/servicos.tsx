@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, Alert, Pressable } from 'react-native';
-import { Button, Card, FAB, Input, ListItem } from '@rneui/themed';
+import { Button, FAB, Input, ListItem } from '@rneui/themed';
 import { FontAwesome } from '@expo/vector-icons';
 import { Servico } from '@/types';
-import { servicoService } from '@/services/supabase';
+import { supabase } from '@/lib/supabase';
 import colors from '@/constants/colors';
 import { router } from 'expo-router';
+import { useEmpresa } from '@/contexts/EmpresaContext';
+import CardCustom from '@/components/CardCustom';
 
 export default function Servicos() {
+  const { empresa } = useEmpresa();
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [novoServico, setNovoServico] = useState<Omit<Servico, 'id'>>({
@@ -19,13 +22,17 @@ export default function Servicos() {
   const [lastTap, setLastTap] = useState(0);
 
   useEffect(() => {
-    carregarServicos();
-  }, []);
+    if (empresa) carregarServicos();
+  }, [empresa]);
 
   const carregarServicos = async () => {
     try {
       setCarregando(true);
-      const data = await servicoService.listar();
+      const { data, error } = await supabase
+        .from('servicos')
+        .select('*')
+        .eq('empresa_id', empresa?.id);
+      if (error) throw error;
       setServicos(data);
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível carregar os serviços');
@@ -45,8 +52,12 @@ export default function Servicos() {
     }
 
     try {
-      const servico = await servicoService.criar(novoServico);
-      setServicos([...servicos, servico]);
+      const { data, error } = await supabase
+        .from('servicos')
+        .insert([{ ...novoServico, empresa_id: empresa?.id }])
+        .select('*');
+      if (error) throw error;
+      setServicos(data);
       setNovoServico({ nome: '', preco: 0, descricao: '' });
       setMostrarFormulario(false);
       Alert.alert('Sucesso', 'Serviço cadastrado com sucesso!');
@@ -77,7 +88,12 @@ export default function Servicos() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await servicoService.excluir(servico.id);
+              const { error } = await supabase
+                .from('servicos')
+                .delete()
+                .eq('id', servico.id)
+                .eq('empresa_id', empresa?.id);
+              if (error) throw error;
               Alert.alert('Sucesso', 'Serviço excluído com sucesso!');
               carregarServicos();
             } catch (error) {
@@ -151,9 +167,9 @@ export default function Servicos() {
       />
 
       {mostrarFormulario ? (
-        <Card>
-          <Card.Title>Novo Serviço</Card.Title>
-          <Card.Divider />
+        <CardCustom containerStyle={styles.card}>
+          <CardCustom.Title>Novo Serviço</CardCustom.Title>
+          <CardCustom.Divider />
           <Input
             label="Nome"
             value={novoServico.nome}
@@ -191,7 +207,7 @@ export default function Servicos() {
             buttonStyle={styles.cancelButton}
             type="outline"
           />
-        </Card>
+        </CardCustom>
       ) : (
         <FAB
           placement="right"
@@ -256,5 +272,9 @@ const styles = StyleSheet.create({
   cancelButton: {
     borderColor: colors.textLight,
     marginVertical: 8,
+  },
+  card: {
+    margin: 8,
+    borderRadius: 8,
   },
 }); 

@@ -14,7 +14,8 @@ export interface Servico {
 }
 
 export interface ItemVenda {
-  id: string;
+  data: any; // <-- NÃO EXISTE NA TABELA
+  id: string; // <-- NÃO ENVIE NO INSERT, é gerado pelo banco
   produto_id?: string;
   servico_id?: string;
   quantidade: number;
@@ -23,6 +24,7 @@ export interface ItemVenda {
 }
 
 export interface Venda {
+  error: boolean;
   id: string;
   cliente: string;
   vendedor: string;
@@ -45,4 +47,4 @@ export interface Vendedor {
   telefone: string;
   email: string;
   comissao: string;
-} 
+}

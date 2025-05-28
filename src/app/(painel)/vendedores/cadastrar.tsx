@@ -15,9 +15,7 @@ export default function CadastrarVendedor() {
   const [carregando, setCarregando] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      carregarVendedor();
-    }
+    if (id) carregarVendedor();
   }, [id]);
 
   const carregarVendedor = async () => {
@@ -42,7 +40,6 @@ export default function CadastrarVendedor() {
       Alert.alert('Erro', 'O nome é obrigatório');
       return;
     }
-
     try {
       setCarregando(true);
       if (id) {
@@ -52,7 +49,11 @@ export default function CadastrarVendedor() {
         await vendedorService.criar({ nome, telefone, email, comissao });
         Alert.alert('Sucesso', 'Vendedor cadastrado com sucesso!');
       }
-      router.back();
+      setNome('');
+      setTelefone('');
+      setEmail('');
+      setComissao('');
+      router.push('/(painel)/vendedores');
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível salvar o vendedor');
     } finally {
@@ -70,58 +71,19 @@ export default function CadastrarVendedor() {
           buttonStyle={styles.voltarButton}
         />
       </View>
-
       <ScrollView style={styles.form}>
-        <Input
-          label="Nome"
-          value={nome}
-          onChangeText={setNome}
-          placeholder="Nome do vendedor"
-          autoCapitalize="words"
-        />
-
-        <Input
-          label="Telefone"
-          value={telefone}
-          onChangeText={setTelefone}
-          placeholder="Telefone do vendedor"
-          keyboardType="phone-pad"
-        />
-
-        <Input
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Email do vendedor"
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        <Input
-          label="Comissão (%)"
-          value={comissao}
-          onChangeText={setComissao}
-          placeholder="Porcentagem de comissão"
-          keyboardType="numeric"
-        />
-
-        <Button
-          title={id ? "Atualizar" : "Cadastrar"}
-          onPress={handleSubmit}
-          loading={carregando}
-          disabled={carregando}
-          buttonStyle={styles.submitButton}
-        />
+        <Input label="Nome" value={nome} onChangeText={setNome} placeholder="Nome do vendedor" autoCapitalize="words" />
+        <Input label="Telefone" value={telefone} onChangeText={setTelefone} placeholder="Telefone" keyboardType="phone-pad" />
+        <Input label="Email" value={email} onChangeText={setEmail} placeholder="Email" keyboardType="email-address" autoCapitalize="none" />
+        <Input label="Comissão (%)" value={comissao} onChangeText={setComissao} placeholder="Porcentagem de comissão" keyboardType="numeric" />
+        <Button title={id ? "Atualizar" : "Cadastrar"} onPress={handleSubmit} loading={carregando} disabled={carregando} buttonStyle={styles.submitButton} />
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
     padding: 16,
     backgroundColor: colors.white,
@@ -139,11 +101,6 @@ const styles = StyleSheet.create({
   buttonIcon: {
     marginRight: 8,
   },
-  form: {
-    padding: 16,
-  },
-  submitButton: {
-    backgroundColor: colors.primary,
-    marginTop: 16,
-  },
-}); 
+  form: { padding: 16 },
+  submitButton: { backgroundColor: colors.primary, marginTop: 16 },
+});

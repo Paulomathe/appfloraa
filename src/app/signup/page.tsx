@@ -116,7 +116,7 @@ export default function Signup() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.zinc,
+    backgroundColor: colors.primary,
   },
   header: {
     paddingTop: 34,

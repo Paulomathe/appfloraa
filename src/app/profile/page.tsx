@@ -6,12 +6,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import colors from '@/constants/colors';
 
 export default function Profile() {  
-  const { setAuth, user } = useAuth(); 
+  const { user } = useAuth(); 
 
   async function handleSignout() {
     try {
       await supabase.auth.signOut();
-      setAuth(null);
       router.replace('/signin/page');
     } catch (error) {
       Alert.alert('Erro', 'Erro ao sair da conta, tente mais tarde');

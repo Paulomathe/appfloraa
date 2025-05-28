@@ -47,28 +47,23 @@ export default function ProdutoSearch({ onSelect }: ProdutoSearchProps) {
         value={termo}
         onChangeText={buscarProdutos}
         leftIcon={<FontAwesome name="search" size={24} color={colors.textLight} />}
-        loading={carregando}
       />
-      {produtos.length > 0 && (
-        <View style={styles.resultados}>
-          {produtos.map((produto) => (
-            <ListItem
-              key={produto.id}
-              bottomDivider
-              onPress={() => handleSelect(produto)}
-            >
-              <FontAwesome name="cube" size={24} color={colors.textLight} />
-              <ListItem.Content>
-                <ListItem.Title>{produto.nome}</ListItem.Title>
-                <ListItem.Subtitle>
-                  R$ {produto.preco.toFixed(2)} - Estoque: {produto.estoque}
-                </ListItem.Subtitle>
-              </ListItem.Content>
-              <ListItem.Chevron />
-            </ListItem>
-          ))}
-        </View>
-      )}
+      {produtos.map((produto) => (
+  <ListItem
+    key={produto.id}
+    bottomDivider
+    onPress={() => handleSelect(produto)}
+  >
+    <FontAwesome name="cube" size={24} color={colors.textLight} />
+    <ListItem.Content>
+      <ListItem.Title>{produto.nome}</ListItem.Title>
+      <ListItem.Subtitle>
+        R$ {produto.preco.toFixed(2)} - Estoque: {produto.estoque}
+      </ListItem.Subtitle>
+    </ListItem.Content>
+    <ListItem.Chevron />
+  </ListItem>
+))}
     </View>
   );
 }
@@ -76,7 +71,7 @@ export default function ProdutoSearch({ onSelect }: ProdutoSearchProps) {
 const styles = StyleSheet.create({
   container: {
     position: 'relative',
-    zIndex: 1,
+    zIndex: 100, // aumente aqui
   },
   resultados: {
     position: 'absolute',
@@ -85,11 +80,13 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: colors.white,
     borderRadius: 8,
-    elevation: 4,
+    elevation: 20, // aumente para Android
+    zIndex: 200,   // aumente para garantir sobreposição
+    maxHeight: 220,
+    marginTop: 2,
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    maxHeight: 200,
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
-}); 
+});

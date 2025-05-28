@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, Alert, Pressable } from 'react-native';
-import { Button, ListItem } from '@rneui/themed';
+import { View, StyleSheet, FlatList, Alert, Pressable, Image } from 'react-native';
+
+import { Button, ListItem, Input } from '@rneui/themed';
 import { FontAwesome } from '@expo/vector-icons';
 import { Vendedor } from '@/types';
 import { vendedorService } from '@/services/supabase';
@@ -11,6 +12,10 @@ export default function Vendedores() {
   const [vendedores, setVendedores] = useState<Vendedor[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [lastTap, setLastTap] = useState(0);
+  const [busca, setBusca] = useState('');
+  const vendedoresFiltrados = vendedores.filter(v =>
+    v.nome.toLowerCase().includes(busca.toLowerCase())
+  );
 
   useEffect(() => {
     carregarVendedores();
@@ -75,7 +80,11 @@ export default function Vendedores() {
         bottomDivider
         containerStyle={styles.listItem}
       >
-        <FontAwesome name="user-secret" size={24} color={colors.textLight} />
+        <Image
+          source={require('../../../assets/images/vendedor.png')}
+          style={{ width: 24, height: 24 }}
+          resizeMode="contain"
+        />
         <ListItem.Content>
           <ListItem.Title style={styles.title}>{item.nome}</ListItem.Title>
           <ListItem.Subtitle style={styles.subtitle}>{item.telefone}</ListItem.Subtitle>
@@ -109,8 +118,14 @@ export default function Vendedores() {
         />
       </View>
 
+      <Input
+        placeholder="Buscar vendedor..."
+        value={busca}
+        onChangeText={setBusca}
+      />
+
       <FlatList
-        data={vendedores}
+        data={vendedoresFiltrados}
         renderItem={renderVendedor}
         keyExtractor={(item) => item.id}
         refreshing={carregando}
@@ -166,4 +181,4 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
-}); 
+});

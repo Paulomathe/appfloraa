@@ -5,8 +5,6 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import colors from '@/constants/colors';
 import { FontAwesome } from '@expo/vector-icons';
-import { useEmpresa, Empresa } from '@/contexts/EmpresaContext';
-import { useAuth } from '@/contexts/AuthContext';
 
 export default function CadastrarCliente() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -14,24 +12,15 @@ export default function CadastrarCliente() {
   const [telefone, setTelefone] = useState('');
   const [email, setEmail] = useState('');
   const [carregando, setCarregando] = useState(false);
-  const { empresa, setEmpresa } = useEmpresa();
-  const { user } = useAuth();
 
   useEffect(() => {
-    if (id && empresa) {
-      carregarCliente();
-    }
-  }, [id, empresa]);
+    if (id) carregarCliente();
+  }, [id]);
 
   const carregarCliente = async () => {
     try {
       setCarregando(true);
-      const { data } = await supabase
-        .from('clientes')
-        .select('*')
-        .eq('id', id)
-        .eq('empresa_id', empresa?.id)
-        .single();
+      const { data } = await supabase.from('clientes').select('*').eq('id', id).single();
       if (data) {
         setNome(data.nome);
         setTelefone(data.telefone);
@@ -49,68 +38,24 @@ export default function CadastrarCliente() {
       Alert.alert('Erro', 'O nome é obrigatório');
       return;
     }
-    if (!empresa) {
-      Alert.alert('Erro', 'Selecione uma filial antes de cadastrar.');
-      return;
-    }
     try {
       setCarregando(true);
       if (id) {
-        await supabase
-          .from('clientes')
-          .update({ nome, telefone, email })
-          .eq('id', id)
-          .eq('empresa_id', empresa.id);
+        await supabase.from('clientes').update({ nome, telefone, email }).eq('id', id);
         Alert.alert('Sucesso', 'Cliente atualizado com sucesso!');
       } else {
-        await supabase
-          .from('clientes')
-          .insert([{ nome, telefone, email, empresa_id: empresa.id }]);
+        await supabase.from('clientes').insert([{ nome, telefone, email }]);
         Alert.alert('Sucesso', 'Cliente cadastrado com sucesso!');
       }
-      router.back();
+      setNome('');
+      setTelefone('');
+      setEmail('');
+      router.push('/(painel)/clientes');
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível salvar o cliente');
     } finally {
       setCarregando(false);
     }
-  };
-
-  const handleExcluir = async (cliente: Cliente) => {
-    if (!empresa) {
-      Alert.alert('Erro', 'Selecione uma filial.');
-      return;
-    }
-    Alert.alert(
-      'Confirmar exclusão',
-      `Deseja realmente excluir o cliente "${cliente.nome}"?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const { error, count } = await supabase
-                .from('clientes')
-                .delete({ count: 'exact' })
-                .eq('id', cliente.id)
-                .eq('empresa_id', empresa.id);
-
-              if (error) throw error;
-              if (count === 0) {
-                Alert.alert('Erro', 'Nenhum registro foi excluído. Verifique se o cliente pertence à filial selecionada e se você tem permissão.');
-              } else {
-                Alert.alert('Sucesso', 'Cliente excluído com sucesso!');
-                carregarClientes();
-              }
-            } catch (error) {
-              Alert.alert('Erro', 'Não foi possível excluir o cliente');
-            }
-          },
-        },
-      ]
-    );
   };
 
   return (
@@ -123,50 +68,18 @@ export default function CadastrarCliente() {
           buttonStyle={styles.voltarButton}
         />
       </View>
-
       <ScrollView style={styles.form}>
-        <Input
-          label="Nome"
-          value={nome}
-          onChangeText={setNome}
-          placeholder="Nome do cliente"
-          autoCapitalize="words"
-        />
-
-        <Input
-          label="Telefone"
-          value={telefone}
-          onChangeText={setTelefone}
-          placeholder="Telefone do cliente"
-          keyboardType="phone-pad"
-        />
-
-        <Input
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Email do cliente"
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        <Button
-          title={id ? "Atualizar" : "Cadastrar"}
-          onPress={handleSubmit}
-          loading={carregando}
-          disabled={carregando}
-          buttonStyle={styles.submitButton}
-        />
+        <Input label="Nome" value={nome} onChangeText={setNome} placeholder="Nome do cliente" autoCapitalize="words" />
+        <Input label="Telefone" value={telefone} onChangeText={setTelefone} placeholder="Telefone" keyboardType="phone-pad" />
+        <Input label="Email" value={email} onChangeText={setEmail} placeholder="Email" keyboardType="email-address" autoCapitalize="none" />
+        <Button title={id ? "Atualizar" : "Cadastrar"} onPress={handleSubmit} loading={carregando} disabled={carregando} buttonStyle={styles.submitButton} />
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
     padding: 16,
     backgroundColor: colors.white,
@@ -184,11 +97,6 @@ const styles = StyleSheet.create({
   buttonIcon: {
     marginRight: 8,
   },
-  form: {
-    padding: 16,
-  },
-  submitButton: {
-    backgroundColor: colors.primary,
-    marginTop: 16,
-  },
-}); 
+  form: { padding: 16 },
+  submitButton: { backgroundColor: colors.primary, marginTop: 16 },
+});

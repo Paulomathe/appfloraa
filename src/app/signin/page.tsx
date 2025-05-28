@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, TextInput, Pressable, Alert, ScrollView } from 
 import colors from '@/constants/colors';
 import React, { useState } from 'react';
 import { Link, useRouter } from 'expo-router';
+import { supabase } from '@/lib/supabase';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -22,12 +23,57 @@ export default function Login() {
         setLoading(false);
         return;
       }
-      // Simula login (substitua por lógica real, se necessário)
-      console.log({ email, password });
+      // Login real com Supabase
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        Alert.alert('Erro', error.message || 'E-mail ou senha inválidos.');
+        setLoading(false);
+        return;
+      }
       // Redireciona para a home após login
       router.replace('/(painel)/home');
     } catch (error: any) {
       Alert.alert('Erro', error.message || 'Erro ao fazer login.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSignUp() {
+    setLoading(true);
+    try {
+      if (!email || !password) {
+        Alert.alert('Erro', 'Preencha email e senha.');
+        setLoading(false);
+        return;
+      }
+      // Exemplo após o cadastro no Auth
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) {
+        Alert.alert('Erro', error.message);
+        setLoading(false);
+        return;
+      }
+
+      // Agora insere na tabela customizada
+      if (!data.user) {
+        Alert.alert('Erro', 'Usuário criado, mas dados do usuário não retornados.');
+        setLoading(false);
+        return;
+      }
+      const { error: userTableError } = await supabase
+        .from('users')
+        .insert([{ id: data.user.id, email }]); // NÃO envie senha!
+
+      if (userTableError) {
+        Alert.alert('Erro', 'Usuário criado no login, mas não salvo na tabela de usuários: ' + userTableError.message);
+        setLoading(false);
+        return;
+      }
+
+      Alert.alert('Sucesso', 'Usuário cadastrado com sucesso!');
+    } catch (error: any) {
+      Alert.alert('Erro', error.message || 'Erro ao cadastrar usuário.');
     } finally {
       setLoading(false);
     }
@@ -101,7 +147,7 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.zinc,
+    backgroundColor: colors.primary,
   },
   header: {
     paddingLeft: 14,

@@ -1,13 +1,12 @@
 import { Drawer } from 'expo-router/drawer';
 import { FontAwesome } from '@expo/vector-icons';
 import colors from "@/constants/colors";
-import { Alert, TouchableOpacity, Text, View, StyleSheet } from 'react-native';
+import { Alert, TouchableOpacity, Text, View, StyleSheet, Image } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
-import { useEffect, useRef } from 'react';
-import { SwitchEmpresa } from '@/components/SwitchEmpresa';
+import React, { useEffect, useRef } from 'react';
 import { ProfileInfo } from '@/components/ProfileInfo';
 
 type DrawerIconProps = {
@@ -54,7 +53,7 @@ export default function PainelLayout() {
             avatarUrl={profileImage}
           />
           
-          <SwitchEmpresa />
+         
 
           <View style={styles.drawerSection}>
             <DrawerItemList {...props} />
@@ -127,7 +126,11 @@ export default function PainelLayout() {
         options={{
           title: 'Vendedores',
           drawerIcon: ({ color, size }: DrawerIconProps) => (
-            <FontAwesome name="user-secret" size={size} color={color} />
+            <Image
+              source={require('../../../assets/images/vendedor.png')}
+              style={{ width: size, height: size, tintColor: color }}
+              resizeMode="contain"
+            />
           ),
         }}
       />
@@ -140,15 +143,7 @@ export default function PainelLayout() {
           ),
         }}
       />
-      <Drawer.Screen
-        name="profile"
-        options={{
-          title: 'Meu Perfil',
-          drawerIcon: ({ color, size }: DrawerIconProps) => (
-            <FontAwesome name="user" size={size} color={color} />
-          ),
-        }}
-      />
+
 
       {/* Telas modais */}
       <Drawer.Screen
@@ -193,7 +188,14 @@ export default function PainelLayout() {
           drawerItemStyle: { display: 'none' },
         }}
       />
-    </Drawer>
+      <Drawer.Screen
+        name="vendas/editar"
+        options={{
+          title: 'Detalhes da Venda',
+          drawerItemStyle: { display: 'none' },
+        }}
+      />
+       </Drawer>
   );
 }
 
@@ -217,4 +219,4 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
   }
-}); 
+});

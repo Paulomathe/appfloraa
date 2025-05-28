@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Text } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Text, Image } from 'react-native';
 import { Button, Input, ListItem } from '@rneui/themed';
 import { router, useNavigation } from 'expo-router';
 import { vendaService } from '@/services/supabase';
@@ -8,13 +8,13 @@ import colors from '@/constants/colors';
 import ProdutoSearch from '@/components/ProdutoSearch';
 import ServicoSearch from '@/components/ServicoSearch';
 import { FontAwesome } from '@expo/vector-icons';
-import { useEmpresa } from '@/contexts/EmpresaContext';
 import { supabase } from '@/lib/supabase';
 import CardCustom from '@/components/CardCustom';
+import VendedorSearch from '@/components/VendedorSearch';
+import { ClienteSearch } from '@/components/ClienteSearch';
 
 export default function NovaVenda() {
   const navigation = useNavigation();
-  const { empresa } = useEmpresa();
   const [venda, setVenda] = useState<Omit<Venda, 'id'>>({
     cliente: '',
     vendedor: '',
@@ -22,19 +22,21 @@ export default function NovaVenda() {
     data: new Date().toISOString(),
     observacoes: '',
     itens: [],
+    error: false, // Inicializa como booleano, conforme o tipo em Venda
   });
   const [carregando, setCarregando] = useState(false);
 
   // Limpa os dados quando a tela é focada
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      setVenda({
+      return setVenda({
         cliente: '',
         vendedor: '',
         valor: 0,
         data: new Date().toISOString(),
         observacoes: '',
         itens: [],
+        error: false,
       });
     });
 
@@ -48,6 +50,7 @@ export default function NovaVenda() {
       quantidade: 1,
       preco_unitario: produto.preco,
       subtotal: produto.preco,
+      data: undefined
     };
 
     const novoValor = venda.valor + item.subtotal;
@@ -65,6 +68,7 @@ export default function NovaVenda() {
       quantidade: 1,
       preco_unitario: servico.preco,
       subtotal: servico.preco,
+      data: undefined
     };
 
     const novoValor = venda.valor + item.subtotal;
@@ -104,10 +108,6 @@ export default function NovaVenda() {
   };
 
   const handleSubmit = async () => {
-    if (!empresa) {
-      Alert.alert('Erro', 'Selecione uma filial antes de cadastrar.');
-      return;
-    }
     if (!venda.cliente.trim()) {
       Alert.alert('Erro', 'O nome do cliente é obrigatório');
       return;
@@ -123,47 +123,58 @@ export default function NovaVenda() {
 
     try {
       setCarregando(true);
-      await supabase
-        .from('vendas')
-        .insert([{ ...venda, empresa_id: empresa.id }]);
+      await vendaService.criar(venda); // Use o serviço, não o insert direto!
       Alert.alert('Sucesso', 'Venda cadastrada com sucesso!');
       router.replace('/(painel)/home');
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível cadastrar a venda');
+    } catch (error: any) {
+      Alert.alert('Erro', error.message || 'Não foi possível cadastrar a venda');
     } finally {
       setCarregando(false);
     }
   };
 
+  function handleAddVendedor(produto: Produto): void {
+    throw new Error('Function not implemented.');
+  }
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.form}>
-        <Input
-          label="Cliente"
-          value={venda.cliente}
-          onChangeText={(text) => setVenda({ ...venda, cliente: text })}
-          placeholder="Nome do cliente"
-          autoCapitalize="words"
-        />
+        <CardCustom containerStyle={styles.card}>
+          <CardCustom.Title>Clientes</CardCustom.Title>
+          <CardCustom.Divider />
+          <View style={{ zIndex: 6, position: 'relative' }}>
+            <ClienteSearch
+              onSelect={(cliente) => setVenda({ ...venda, cliente: cliente.nome })}
+              value={venda.cliente}
+            />
+          </View>
+        </CardCustom>
 
-        <Input
-          label="Vendedor"
-          value={venda.vendedor}
-          onChangeText={(text) => setVenda({ ...venda, vendedor: text })}
-          placeholder="Nome do vendedor"
-          autoCapitalize="words"
-        />
+        <CardCustom containerStyle={styles.card}>
+          <CardCustom.Title>Vendedores</CardCustom.Title>
+          <CardCustom.Divider />
+          <View style={{ zIndex: 5, position: 'relative' }}>
+            <VendedorSearch
+              onSelect={(vendedor) => setVenda({ ...venda, vendedor: vendedor.nome })}
+            />
+          </View>
+        </CardCustom>
 
         <CardCustom containerStyle={styles.card}>
           <CardCustom.Title>Produtos</CardCustom.Title>
           <CardCustom.Divider />
-          <ProdutoSearch onSelect={handleAddProduto} />
+          <View style={{ zIndex: 4, position: 'relative' }}>
+            <ProdutoSearch onSelect={handleAddProduto} />
+          </View>
         </CardCustom>
 
         <CardCustom containerStyle={styles.card}>
           <CardCustom.Title>Serviços (Opcional)</CardCustom.Title>
           <CardCustom.Divider />
-          <ServicoSearch onSelect={handleAddServico} />
+          <View style={{ zIndex: 3, position: 'relative' }}>
+            <ServicoSearch onSelect={handleAddServico} />
+          </View>
         </CardCustom>
 
         {venda.itens.length > 0 && (
@@ -272,4 +283,19 @@ const styles = StyleSheet.create({
     margin: 8,
     borderRadius: 8,
   },
-}); 
+  containerDropdown: {
+    position: 'relative',
+    zIndex: 100, // valor alto para todos
+  },
+  resultados: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: colors.white,
+    borderRadius: 8,
+    elevation: 10,
+    zIndex: 200,
+    maxHeight: 200,
+  }
+});

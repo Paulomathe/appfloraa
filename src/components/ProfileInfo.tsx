@@ -1,7 +1,6 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import colors from '@/constants/colors';
-import { profileImages } from '@/assets';
 
 type ProfileInfoProps = {
   name: string;
@@ -9,17 +8,10 @@ type ProfileInfoProps = {
   avatarUrl?: string | null;
 };
 
-export const ProfileInfo = ({ name, email, avatarUrl }: ProfileInfoProps) => {
+export const ProfileInfo = ({ name, email }: ProfileInfoProps) => {
   return (
     <View style={styles.container}>
-      <Image
-        source={
-          avatarUrl
-            ? { uri: avatarUrl }
-            : profileImages.default
-        }
-        style={styles.avatar}
-      />
+      {/* Avatar removido */}
       <View style={styles.info}>
         <Text style={styles.name}>{name}</Text>
         <Text style={styles.email}>{email}</Text>
@@ -37,13 +29,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-  },
   info: {
-    marginLeft: 16,
+    // marginLeft removido pois não há mais avatar
     flexDirection: 'column',
   },
   name: {
@@ -55,4 +42,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textLight,
   },
-}); 
+});

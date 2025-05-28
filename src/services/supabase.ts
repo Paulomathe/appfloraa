@@ -306,6 +306,7 @@ export const vendaService = {
   },
 
   async criar(venda: Omit<Venda, 'id'>) {
+    // 1. Insere a venda (sem o campo 'itens')
     const { data: vendaData, error: vendaError } = await supabase
       .from('vendas')
       .insert({
@@ -317,14 +318,19 @@ export const vendaService = {
       })
       .select()
       .single();
-    
+
     if (vendaError) throw vendaError;
 
-    // Insere os itens da venda
+    // 2. Insere os itens da venda
     if (venda.itens && venda.itens.length > 0) {
       const itensVenda = venda.itens.map(item => ({
-        ...item,
         venda_id: vendaData.id,
+        produto_id: item.produto_id || null,
+        servico_id: item.servico_id || null,
+        quantidade: item.quantidade,
+        preco_unitario: item.preco_unitario,
+        subtotal: item.subtotal,
+        // NÃO envie id nem data!
       }));
 
       const { error: itensError } = await supabase
@@ -357,4 +363,14 @@ export const vendaService = {
     
     if (error) throw error;
   }
-}; 
+};
+
+// Exemplo de item de venda
+const exemploItemVenda = {
+  venda_id: "uuid-da-venda",
+  produto_id: "uuid-do-produto", // ou null se for serviço
+  servico_id: null,              // ou uuid-do-servico se for serviço
+  quantidade: 2,
+  preco_unitario: 10.00,
+  subtotal: 20.00
+};

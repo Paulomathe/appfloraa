@@ -1,32 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, Alert, Pressable } from 'react-native';
-import { Button, ListItem } from '@rneui/themed';
+import { Button, ListItem, Input } from '@rneui/themed';
 import { FontAwesome } from '@expo/vector-icons';
 import { Cliente } from '@/types';
 import { supabase } from '@/lib/supabase';
 import colors from '@/constants/colors';
 import { router } from 'expo-router';
-import { useEmpresa } from '@/contexts/EmpresaContext';
 
 export default function Clientes() {
-  const { empresa } = useEmpresa();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [lastTap, setLastTap] = useState(0);
+  const [busca, setBusca] = useState('');
+  const clientesFiltrados = clientes.filter(c =>
+    c.nome.toLowerCase().includes(busca.toLowerCase())
+  );
 
   useEffect(() => {
-    if (empresa) carregarClientes();
-  }, [empresa]);
+    carregarClientes();
+  }, []);
 
   const carregarClientes = async () => {
     try {
       setCarregando(true);
       const { data, error } = await supabase
         .from('clientes')
-        .select('*')
-        .eq('empresa_id', empresa?.id);
+        .select('*');
       if (error) throw error;
-      setClientes(data);
+      setClientes(data || []);
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível carregar os clientes');
     } finally {
@@ -37,11 +38,9 @@ export default function Clientes() {
   const handleDoubleTap = (cliente: Cliente) => {
     const now = Date.now();
     const DOUBLE_PRESS_DELAY = 300;
-    
     if (now - lastTap < DOUBLE_PRESS_DELAY) {
       handleEditar(cliente);
     }
-    
     setLastTap(now);
   };
 
@@ -117,8 +116,14 @@ export default function Clientes() {
         />
       </View>
 
+      <Input
+        placeholder="Buscar cliente..."
+        value={busca}
+        onChangeText={setBusca}
+      />
+
       <FlatList
-        data={clientes}
+        data={clientesFiltrados}
         renderItem={renderCliente}
         keyExtractor={(item) => item.id}
         refreshing={carregando}
@@ -174,4 +179,4 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
-}); 
+});

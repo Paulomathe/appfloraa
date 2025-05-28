@@ -5,7 +5,6 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import colors from '@/constants/colors';
 import { FontAwesome } from '@expo/vector-icons';
-import { useEmpresa } from '@/contexts/EmpresaContext';
 
 export default function CadastrarProduto() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -14,13 +13,10 @@ export default function CadastrarProduto() {
   const [descricao, setDescricao] = useState('');
   const [estoque, setEstoque] = useState('');
   const [carregando, setCarregando] = useState(false);
-  const { empresa } = useEmpresa();
 
   useEffect(() => {
-    if (id && empresa) {
-      carregarProduto();
-    }
-  }, [id, empresa]);
+    if (id) carregarProduto();
+  }, [id]);
 
   const carregarProduto = async () => {
     try {
@@ -29,7 +25,6 @@ export default function CadastrarProduto() {
         .from('produtos')
         .select('*')
         .eq('id', id)
-        .eq('empresa_id', empresa?.id)
         .single();
       if (data) {
         setNome(data.nome);
@@ -49,10 +44,6 @@ export default function CadastrarProduto() {
       Alert.alert('Erro', 'O nome é obrigatório');
       return;
     }
-    if (!empresa) {
-      Alert.alert('Erro', 'Selecione uma filial antes de cadastrar.');
-      return;
-    }
     if (!preco || isNaN(Number(preco)) || Number(preco) <= 0) {
       Alert.alert('Erro', 'O preço deve ser um número maior que zero');
       return;
@@ -69,15 +60,13 @@ export default function CadastrarProduto() {
         preco: Number(preco),
         descricao,
         estoque: Number(estoque),
-        empresa_id: empresa.id,
       };
 
       if (id) {
         await supabase
           .from('produtos')
           .update(dadosProduto)
-          .eq('id', id)
-          .eq('empresa_id', empresa.id);
+          .eq('id', id);
         Alert.alert('Sucesso', 'Produto atualizado com sucesso!');
       } else {
         await supabase
@@ -85,6 +74,10 @@ export default function CadastrarProduto() {
           .insert([dadosProduto]);
         Alert.alert('Sucesso', 'Produto cadastrado com sucesso!');
       }
+      setNome('');
+      setPreco('');
+      setDescricao('');
+      setEstoque('');
       router.push('/(painel)/produtos');
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível salvar o produto');
@@ -103,48 +96,12 @@ export default function CadastrarProduto() {
           buttonStyle={styles.voltarButton}
         />
       </View>
-
       <ScrollView style={styles.form}>
-        <Input
-          label="Nome"
-          value={nome}
-          onChangeText={setNome}
-          placeholder="Nome do produto"
-          autoCapitalize="words"
-        />
-
-        <Input
-          label="Preço"
-          value={preco}
-          onChangeText={setPreco}
-          placeholder="Preço do produto"
-          keyboardType="numeric"
-        />
-
-        <Input
-          label="Descrição"
-          value={descricao}
-          onChangeText={setDescricao}
-          placeholder="Descrição do produto"
-          multiline
-          numberOfLines={3}
-        />
-
-        <Input
-          label="Estoque"
-          value={estoque}
-          onChangeText={setEstoque}
-          placeholder="Quantidade em estoque"
-          keyboardType="numeric"
-        />
-
-        <Button
-          title={id ? "Atualizar" : "Cadastrar"}
-          onPress={handleSubmit}
-          loading={carregando}
-          disabled={carregando}
-          buttonStyle={styles.submitButton}
-        />
+        <Input label="Nome" value={nome} onChangeText={setNome} placeholder="Nome do produto" autoCapitalize="words" />
+        <Input label="Preço" value={preco} onChangeText={setPreco} placeholder="Preço do produto" keyboardType="numeric" />
+        <Input label="Descrição" value={descricao} onChangeText={setDescricao} placeholder="Descrição do produto" multiline numberOfLines={3} />
+        <Input label="Estoque" value={estoque} onChangeText={setEstoque} placeholder="Quantidade em estoque" keyboardType="numeric" />
+        <Button title={id ? "Atualizar" : "Cadastrar"} onPress={handleSubmit} loading={carregando} disabled={carregando} buttonStyle={styles.submitButton} />
       </ScrollView>
     </View>
   );
@@ -179,4 +136,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     marginTop: 16,
   },
-}); 
+});

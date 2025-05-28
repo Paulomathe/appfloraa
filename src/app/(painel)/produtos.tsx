@@ -1,32 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, Alert, Pressable } from 'react-native';
-import { Button, ListItem } from '@rneui/themed';
+import { Button, ListItem, Input } from '@rneui/themed';
 import { FontAwesome } from '@expo/vector-icons';
 import { Produto } from '@/types';
 import { supabase } from '@/lib/supabase';
 import colors from '@/constants/colors';
 import { router } from 'expo-router';
-import { useEmpresa } from '@/contexts/EmpresaContext';
+import { produtoService } from '@/services/supabase';
 
 export default function Produtos() {
-  const { empresa } = useEmpresa();
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [lastTap, setLastTap] = useState(0);
+  const [busca, setBusca] = useState('');
+  const produtosFiltrados = produtos.filter(p =>
+    p.nome.toLowerCase().includes(busca.toLowerCase())
+  );
 
   useEffect(() => {
-    if (empresa) carregarProdutos();
-  }, [empresa]);
+    carregarProdutos();
+  }, []);
 
   const carregarProdutos = async () => {
     try {
       setCarregando(true);
       const { data, error } = await supabase
         .from('produtos')
-        .select('*')
-        .eq('empresa_id', empresa?.id);
+        .select('*');
       if (error) throw error;
-      setProdutos(data);
+      setProdutos(data || []);
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível carregar os produtos');
     } finally {
@@ -37,11 +39,9 @@ export default function Produtos() {
   const handleDoubleTap = (produto: Produto) => {
     const now = Date.now();
     const DOUBLE_PRESS_DELAY = 300;
-    
     if (now - lastTap < DOUBLE_PRESS_DELAY) {
       handleEditar(produto);
     }
-    
     setLastTap(now);
   };
 
@@ -56,10 +56,7 @@ export default function Produtos() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await supabase
-                .from('produtos')
-                .delete()
-                .eq('id', produto.id);
+              await produtoService.excluir(produto.id); // Use o serviço!
               Alert.alert('Sucesso', 'Produto excluído com sucesso!');
               carregarProdutos();
             } catch (error) {
@@ -126,8 +123,14 @@ export default function Produtos() {
         />
       </View>
 
+      <Input
+        placeholder="Buscar produto..."
+        value={busca}
+        onChangeText={setBusca}
+      />
+
       <FlatList
-        data={produtos}
+        data={produtosFiltrados}
         renderItem={renderProduto}
         keyExtractor={(item) => item.id}
         refreshing={carregando}
@@ -183,4 +186,4 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
-}); 
+});

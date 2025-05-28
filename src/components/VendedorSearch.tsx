@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Image } from 'react-native'; // Adicione Image aqui
 import { Input, ListItem } from '@rneui/themed';
 import { FontAwesome } from '@expo/vector-icons';
 import { Vendedor } from '@/types';
 import { vendedorService } from '@/services/supabase';
+import { supabase } from '@/lib/supabase';
 import colors from '@/constants/colors';
 
 type VendedorSearchProps = {
@@ -11,7 +12,8 @@ type VendedorSearchProps = {
   value?: string;
 };
 
-export default function VendedorSearch({ onSelect, value }: VendedorSearchProps) {
+export default function VendedorSearch(props: VendedorSearchProps) {
+  const { onSelect, value } = props;
   const [termo, setTermo] = useState(value || '');
   const [vendedores, setVendedores] = useState<Vendedor[]>([]);
   const [carregando, setCarregando] = useState(false);
@@ -54,26 +56,32 @@ export default function VendedorSearch({ onSelect, value }: VendedorSearchProps)
         placeholder="Buscar vendedor..."
         value={termo}
         onChangeText={buscarVendedores}
-        leftIcon={<FontAwesome name="user-secret" size={24} color={colors.textLight} />}
+        leftIcon={
+          <Image
+            source={require('../../assets/images/vendedor.png')}
+            style={{ width: 24, height: 24 }}
+            resizeMode="contain"
+          />
+        }
       />
-      {vendedores.length > 0 && (
-        <View style={styles.resultados}>
-          {vendedores.map((vendedor) => (
-            <ListItem
-              key={vendedor.id}
-              bottomDivider
-              onPress={() => handleSelect(vendedor)}
-            >
-              <FontAwesome name="user-secret" size={24} color={colors.textLight} />
-              <ListItem.Content>
-                <ListItem.Title>{vendedor.nome}</ListItem.Title>
-                <ListItem.Subtitle>Comissão: {vendedor.comissao}%</ListItem.Subtitle>
-              </ListItem.Content>
-              <ListItem.Chevron />
-            </ListItem>
-          ))}
-        </View>
-      )}
+      {vendedores.map((vendedor) => (
+        <ListItem
+          key={vendedor.id}
+          bottomDivider
+          onPress={() => handleSelect(vendedor)}
+        >
+          <Image
+            source={require('../../assets/images/vendedor.png')}
+            style={{ width: 24, height: 24 }}
+            resizeMode="contain"
+          />
+          <ListItem.Content>
+            <ListItem.Title>{vendedor.nome}</ListItem.Title>
+            <ListItem.Subtitle>Comissão: {vendedor.comissao}%</ListItem.Subtitle>
+          </ListItem.Content>
+          <ListItem.Chevron />
+        </ListItem>
+      ))}
     </View>
   );
 }
@@ -81,7 +89,7 @@ export default function VendedorSearch({ onSelect, value }: VendedorSearchProps)
 const styles = StyleSheet.create({
   container: {
     position: 'relative',
-    zIndex: 1,
+    zIndex: 100, // aumente aqui
   },
   resultados: {
     position: 'absolute',
@@ -90,11 +98,13 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: colors.white,
     borderRadius: 8,
-    elevation: 4,
+    elevation: 20, // aumente para Android
+    zIndex: 200,   // aumente para garantir sobreposição
+    maxHeight: 220,
+    marginTop: 2,
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    maxHeight: 200,
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
-}); 
+});

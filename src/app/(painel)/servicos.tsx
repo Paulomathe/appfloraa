@@ -1,39 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, Alert, Pressable } from 'react-native';
-import { Button, FAB, Input, ListItem } from '@rneui/themed';
+import { Button, Input, ListItem } from '@rneui/themed';
 import { FontAwesome } from '@expo/vector-icons';
 import { Servico } from '@/types';
 import { supabase } from '@/lib/supabase';
 import colors from '@/constants/colors';
 import { router } from 'expo-router';
-import { useEmpresa } from '@/contexts/EmpresaContext';
-import CardCustom from '@/components/CardCustom';
 
 export default function Servicos() {
-  const { empresa } = useEmpresa();
   const [servicos, setServicos] = useState<Servico[]>([]);
-  const [mostrarFormulario, setMostrarFormulario] = useState(false);
-  const [novoServico, setNovoServico] = useState<Omit<Servico, 'id'>>({
-    nome: '',
-    preco: 0,
-    descricao: '',
-  });
   const [carregando, setCarregando] = useState(true);
   const [lastTap, setLastTap] = useState(0);
+  const [busca, setBusca] = useState('');
 
   useEffect(() => {
-    if (empresa) carregarServicos();
-  }, [empresa]);
+    carregarServicos();
+  }, []);
 
   const carregarServicos = async () => {
     try {
       setCarregando(true);
       const { data, error } = await supabase
         .from('servicos')
-        .select('*')
-        .eq('empresa_id', empresa?.id);
+        .select('*');
       if (error) throw error;
-      setServicos(data);
+      setServicos(data || []);
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível carregar os serviços');
     } finally {
@@ -41,39 +32,12 @@ export default function Servicos() {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!novoServico.nome.trim()) {
-      Alert.alert('Erro', 'O nome do serviço é obrigatório');
-      return;
-    }
-    if (novoServico.preco <= 0) {
-      Alert.alert('Erro', 'O preço deve ser maior que zero');
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('servicos')
-        .insert([{ ...novoServico, empresa_id: empresa?.id }])
-        .select('*');
-      if (error) throw error;
-      setServicos(data);
-      setNovoServico({ nome: '', preco: 0, descricao: '' });
-      setMostrarFormulario(false);
-      Alert.alert('Sucesso', 'Serviço cadastrado com sucesso!');
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível cadastrar o serviço');
-    }
-  };
-
   const handleDoubleTap = (servico: Servico) => {
     const now = Date.now();
     const DOUBLE_PRESS_DELAY = 300;
-    
     if (now - lastTap < DOUBLE_PRESS_DELAY) {
       handleEditar(servico);
     }
-    
     setLastTap(now);
   };
 
@@ -91,8 +55,7 @@ export default function Servicos() {
               const { error } = await supabase
                 .from('servicos')
                 .delete()
-                .eq('id', servico.id)
-                .eq('empresa_id', empresa?.id);
+                .eq('id', servico.id);
               if (error) throw error;
               Alert.alert('Sucesso', 'Serviço excluído com sucesso!');
               carregarServicos();
@@ -111,6 +74,10 @@ export default function Servicos() {
       params: { id: servico.id }
     });
   };
+
+  const servicosFiltrados = servicos.filter(s =>
+    s.nome.toLowerCase().includes(busca.toLowerCase())
+  );
 
   const renderServico = ({ item }: { item: Servico }) => (
     <Pressable onPress={() => handleDoubleTap(item)}>
@@ -157,65 +124,21 @@ export default function Servicos() {
         />
       </View>
 
+      <Input
+        placeholder="Buscar serviço..."
+        value={busca}
+        onChangeText={setBusca}
+      />
+
       <FlatList
-        data={servicos}
+        data={servicosFiltrados}
         renderItem={renderServico}
         keyExtractor={(item) => item.id}
         refreshing={carregando}
         onRefresh={carregarServicos}
         contentContainerStyle={styles.lista}
+        ListEmptyComponent={null}
       />
-
-      {mostrarFormulario ? (
-        <CardCustom containerStyle={styles.card}>
-          <CardCustom.Title>Novo Serviço</CardCustom.Title>
-          <CardCustom.Divider />
-          <Input
-            label="Nome"
-            value={novoServico.nome}
-            onChangeText={(text) => setNovoServico({ ...novoServico, nome: text })}
-            placeholder="Nome do serviço"
-            autoCapitalize="words"
-          />
-          <Input
-            label="Preço"
-            value={novoServico.preco > 0 ? novoServico.preco.toString() : ''}
-            onChangeText={(text) => {
-              const preco = text.replace(',', '.');
-              setNovoServico({ ...novoServico, preco: parseFloat(preco) || 0 });
-            }}
-            placeholder="0,00"
-            keyboardType="numeric"
-          />
-          <Input
-            label="Descrição"
-            value={novoServico.descricao}
-            onChangeText={(text) => setNovoServico({ ...novoServico, descricao: text })}
-            placeholder="Descrição do serviço"
-            multiline
-            numberOfLines={3}
-          />
-          <Button
-            title="Salvar"
-            onPress={handleSubmit}
-            buttonStyle={styles.saveButton}
-            loading={carregando}
-          />
-          <Button
-            title="Cancelar"
-            onPress={() => setMostrarFormulario(false)}
-            buttonStyle={styles.cancelButton}
-            type="outline"
-          />
-        </CardCustom>
-      ) : (
-        <FAB
-          placement="right"
-          icon={{ name: 'add', color: colors.white }}
-          color={colors.primary}
-          onPress={() => setMostrarFormulario(true)}
-        />
-      )}
     </View>
   );
 }
@@ -265,16 +188,4 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
-  saveButton: {
-    backgroundColor: colors.primary,
-    marginVertical: 8,
-  },
-  cancelButton: {
-    borderColor: colors.textLight,
-    marginVertical: 8,
-  },
-  card: {
-    margin: 8,
-    borderRadius: 8,
-  },
-}); 
+});

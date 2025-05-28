@@ -2,88 +2,53 @@
 
 Aplicativo de ponto de venda (PDV) para gestão de vendas, produtos, serviços, clientes e vendedores, desenvolvido em **React Native** com **Expo Router** e integração com **Supabase**.
 
----
+## Funcionalidades
 
-## 🚀 Como executar o projeto
+- Cadastro e gerenciamento de produtos, serviços, clientes e vendedores
+- Registro e acompanhamento de vendas
+- Busca rápida por produtos, serviços, clientes e vendedores
+- Autenticação de usuários
+- Interface adaptável ao tema do sistema (claro/escuro)
+- Navegação moderna com Expo Router
+- Ícones personalizados e design responsivo
 
-### 1. Pré-requisitos
+## Tecnologias Utilizadas
 
-- [Node.js](https://nodejs.org/) (recomendado v18 ou superior)
-- [Expo CLI](https://docs.expo.dev/get-started/installation/)  
-  Instale com:  
-  ```
-  npm install -g expo-cli
-  ```
-- Celular Android ou emulador Android
-- Conta gratuita no [Supabase](https://supabase.com/) (para backend e autenticação)
+- [Expo](https://expo.dev/) (~52.0.46)
+- [React Native](https://reactnative.dev/)
+- [Expo Router](https://expo.github.io/router/) (~4.0.21)
+- [React Native Elements](https://reactnativeelements.com/) (`@rneui/themed`)
+- [Supabase](https://supabase.com/) (backend e autenticação)
+- [React Native Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/) (~2.20.2)
 
----
+## Instalação
 
-### 2. Clonar o repositório
-
-```sh
-git clone https://github.com/seu-usuario/appflora.git
-cd appfloraa
-```
-
----
-
-### 3. Instalar as dependências
-
-```sh
-npm install
-# ou
-yarn install
-```
-
----
-
-### 4. Configurar o Supabase
-
-- Renomeie o arquivo `.env.example` para `.env` (se existir).
-- Preencha as variáveis com as chaves do seu projeto Supabase.
-- Caso não exista `.env.example`, edite diretamente o arquivo de configuração em `src/constants/supabase.ts` com sua URL e chave anônima do Supabase.
-
----
-
-### 5. Rodar o projeto no Android (modo desenvolvimento)
-
-```sh
-npx expo start
-```
-
-- Escaneie o QR Code com o aplicativo **Expo Go** no seu celular Android  
-  **OU**  
-- Pressione `a` no terminal para abrir no emulador Android.
-
----
-
-### 6. Gerar APK para instalar manualmente (sem publicar)
-
-Se quiser gerar um APK para instalar no seu celular:
-
-1. Instale o EAS CLI:
-   ```
-   npm install -g eas-cli
+1. **Clone o repositório:**
+   ```sh
+   git clone https://github.com/Paulomathe/appfloraa.git
+   cd appfloraa
    ```
 
-2. Configure o EAS Build:
-   ```
-   eas build:configure
+2. **Instale as dependências:**
+   ```sh
+   npm install
+   # ou
+   yarn install
    ```
 
-3. Gere o APK:
+3. **Configure o Supabase:**
+   - Renomeie `.env.example` para `.env` e preencha com suas chaves do Supabase.
    ```
-   eas build -p android --profile preview
+   SUPABASE_URL=coloque_sua_url_aqui
+   SUPABASE_ANON_KEY=coloque_sua_chave_aqui
    ```
-   - Escolha a opção APK quando solicitado.
-   - Após o build, baixe o arquivo APK pelo link exibido no terminal.
 
-4. Instale o APK no seu celular.
+4. **Execute o projeto:**
+   ```sh
+   npx expo start
+   ```
 
----
-
-## 📁 Estrutura de Pastas
+## Estrutura de Pastas
 
 ```
 src/
@@ -102,30 +67,16 @@ assets/
   images/            # Imagens e ícones do app
 ```
 
----
+## Observações
 
-## 📝 Observações
-
-- O ícone do app está em `assets/images/iconeApp.png` (recomendado 1024x1024px).
+- O ícone do app deve estar em `assets/images/iconeApp.png` (recomendado 1024x1024px, sem textos).
 - O splash screen está em `assets/images/loading.png`.
 - Para personalizar temas, edite `src/constants/colors.ts`.
 
----
-
-## 🛠️ Tecnologias Utilizadas
-
-- [Expo](https://expo.dev/)
-- [React Native](https://reactnative.dev/)
-- [Expo Router](https://expo.github.io/router/)
-- [React Native Elements](https://reactnativeelements.com/) (`@rneui/themed`)
-- [Supabase](https://supabase.com/)
-
----
-
-## 📄 Licença
+## Licença
 
 Este projeto está sob a licença MIT.
 
 ---
 
-Desenvolvido por Paulo Matheus Avelino de Jesus 
+Desenvolvido por [Seu Nome ou Equipe] 🚀
